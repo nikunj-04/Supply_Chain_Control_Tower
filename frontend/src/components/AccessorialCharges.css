@@ -1,0 +1,386 @@
+.accessorial-charges {
+  padding: 16px;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.charges-header {
+  margin-bottom: 12px;
+}
+
+.charges-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 2px 0;
+}
+
+.last-updated {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.summary-card .card-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.summary-card .card-content {
+  flex: 1;
+}
+
+.summary-card .card-value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.summary-card .card-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 1px;
+}
+
+.summary-card .card-count,
+.summary-card .card-sublabel {
+  font-size: 12px;
+  color: #999;
+}
+
+.summary-card.recoverable .card-value {
+  color: #2e7d32;
+}
+
+.summary-card.review .card-value {
+  color: #ed6c02;
+}
+
+.summary-card.billed .card-value {
+  color: #0288d1;
+}
+
+.summary-card.recovered .card-value {
+  color: #2e7d32;
+}
+
+/* Charge Type Breakdown */
+.charge-breakdown {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+.charge-breakdown h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.breakdown-item {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 10px;
+  border-left: 3px solid #1976d2;
+}
+
+.breakdown-type {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.breakdown-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 2px;
+}
+
+.breakdown-count {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Filters */
+.charges-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.charges-filters button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.charges-filters button:hover {
+  border-color: #1976d2;
+  color: #1976d2;
+  background: #e3f2fd;
+}
+
+.charges-filters button.active {
+  background: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+/* Opportunities Table */
+.opportunities-table {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.opportunities-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.opportunities-table thead {
+  background: #f5f5f5;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.opportunities-table th {
+  padding: 10px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.opportunities-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.opportunities-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.opportunities-table td {
+  padding: 10px 10px;
+  font-size: 12px;
+  color: #333;
+}
+
+.opportunities-table .charge-id {
+  font-family: monospace;
+  font-size: 12px;
+  color: #666;
+}
+
+.opportunities-table .amount {
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-review {
+  background: #fff9c4;
+  color: #f57f17;
+}
+
+.status-billed {
+  background: #e3f2fd;
+  color: #01579b;
+}
+
+.status-recovered {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+/* Action Buttons */
+.action-button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-button.bill-now {
+  background: #2e7d32;
+  color: white;
+}
+
+.action-button.bill-now:hover {
+  background: #1b5e20;
+}
+
+.action-button.review {
+  background: #ed6c02;
+  color: white;
+}
+
+.action-button.review:hover {
+  background: #e65100;
+}
+
+.action-button.track {
+  background: #0288d1;
+  color: white;
+}
+
+.action-button.track:hover {
+  background: #01579b;
+}
+
+.action-button.download {
+  background: #27ae60;
+  color: white;
+  font-size: 11px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-button.download:hover {
+  background: #229954;
+}
+
+.action-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.action-button:disabled:hover {
+  background: #bdc3c7;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: #1976d2;
+  color: #1976d2;
+  background: #e3f2fd;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  font-size: 16px;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .opportunities-table {
+    overflow-x: auto;
+  }
+  
+  .opportunities-table table {
+    min-width: 900px;
+  }
+}

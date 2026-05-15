@@ -1,0 +1,392 @@
+.billing-analytics {
+  padding: 16px;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.analytics-header {
+  margin-bottom: 12px;
+}
+
+.analytics-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 2px 0;
+}
+
+.last-updated {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.summary-card .card-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.summary-card .card-content {
+  flex: 1;
+}
+
+.summary-card .card-value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.summary-card .card-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 1px;
+}
+
+.summary-card .card-sublabel {
+  font-size: 11px;
+  color: #999;
+}
+
+.summary-card.revenue .card-value {
+  color: #0288d1;
+}
+
+.summary-card.collection .card-value {
+  color: #2e7d32;
+}
+
+.summary-card.dso .card-value {
+  color: #ed6c02;
+}
+
+.summary-card.overdue .card-value {
+  color: #d32f2f;
+}
+
+/* Analytics Grid */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Analytics Card */
+.analytics-card {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+}
+
+/* Revenue by Service */
+.service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.service-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.service-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-transform: capitalize;
+}
+
+.service-revenue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.service-bar-container {
+  height: 5px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.service-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.service-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #666;
+}
+
+/* Invoice Status */
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.status-item {
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #1976d2;
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-paid {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.status-pending {
+  background: #fff9c4;
+  color: #f57f17;
+}
+
+.status-overdue {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-disputed {
+  background: #fce4ec;
+  color: #880e4f;
+}
+
+.status-count {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.status-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 2px;
+}
+
+.status-percentage {
+  font-size: 11px;
+  color: #999;
+}
+
+/* Trend Chart */
+.trend-card {
+  grid-column: 1 / -1;
+}
+
+.trend-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 120px;
+  padding: 10px 0;
+}
+
+.trend-bar-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.trend-bar {
+  width: 100%;
+  background: linear-gradient(180deg, #42a5f5, #1976d2);
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  min-height: 2px;
+}
+
+.trend-bar:hover {
+  opacity: 0.8;
+}
+
+.trend-bar:hover .trend-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.trend-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 10;
+  margin-bottom: 6px;
+}
+
+.tooltip-date {
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.tooltip-revenue {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4fc3f7;
+  margin-bottom: 3px;
+}
+
+.tooltip-details {
+  font-size: 11px;
+  color: #ccc;
+}
+
+.trend-label {
+  font-size: 11px;
+  color: #666;
+  margin-top: 8px;
+  transform: rotate(-45deg);
+  white-space: nowrap;
+}
+
+/* KPI Table */
+.kpi-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.kpi-table tr {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.kpi-table tr:last-child {
+  border-bottom: none;
+}
+
+.kpi-table td {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.kpi-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.kpi-value {
+  text-align: right;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.kpi-value.overdue {
+  color: #d32f2f;
+}
+
+.kpi-value.disputed {
+  color: #880e4f;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  font-size: 16px;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .trend-chart {
+    height: 150px;
+    gap: 2px;
+  }
+  
+  .trend-label {
+    font-size: 9px;
+  }
+}

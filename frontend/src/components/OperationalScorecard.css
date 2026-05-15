@@ -1,0 +1,159 @@
+.scorecard-container {
+  padding: 10px 0 20px 0;
+}
+
+.scorecard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.scorecard-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.summary-badges {
+  display: flex;
+  gap: 12px;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.badge-success {
+  background-color: #10b981;
+}
+
+.badge-warning {
+  background-color: #f59e0b;
+}
+
+.badge-critical {
+  background-color: #ef4444;
+}
+
+.systems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.system-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.system-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.system-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.system-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.system-status {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+}
+
+.metrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metric-item {
+  padding: 8px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.metric-item:hover {
+  background-color: #f3f4f6;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.metric-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.metric-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.metric-value-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.metric-unit {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.metric-trend {
+  font-size: 18px;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .systems-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-badges {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -1,0 +1,312 @@
+.client-profitability {
+  padding: 16px;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.profitability-header {
+  margin-bottom: 12px;
+}
+
+.profitability-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 2px 0;
+}
+
+.last-updated {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.summary-card .card-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.summary-card .card-content {
+  flex: 1;
+}
+
+.summary-card .card-value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: #2e7d32;
+}
+
+.summary-card .card-value-text {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: #1976d2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-card .card-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 1px;
+}
+
+.summary-card .card-count,
+.summary-card .card-sublabel {
+  font-size: 12px;
+  color: #999;
+}
+
+.summary-card.revenue .card-value {
+  color: #0288d1;
+}
+
+.summary-card.profit .card-value {
+  color: #2e7d32;
+}
+
+/* Client Table */
+.client-table-container {
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.client-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.client-table thead {
+  background: #f5f5f5;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.client-table th {
+  padding: 10px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.client-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.client-table th.sortable:hover {
+  background-color: #e8e8e8;
+}
+
+.client-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.client-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.client-table td {
+  padding: 10px 10px;
+  font-size: 12px;
+  color: #333;
+}
+
+.client-name {
+  max-width: 200px;
+}
+
+.client-name-text {
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+}
+
+.client-id {
+  font-size: 11px;
+  color: #999;
+  font-family: monospace;
+}
+
+.revenue {
+  font-weight: 600;
+  color: #0288d1;
+}
+
+.profit {
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+/* Margin Badges */
+.margin-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.margin-high {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.margin-medium {
+  background: #fff9c4;
+  color: #f57f17;
+}
+
+.margin-low {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* Growth Badges */
+.growth-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.growth-badge.positive {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.growth-badge.negative {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.growth-badge.neutral {
+  background: #f5f5f5;
+  color: #666;
+}
+
+/* Service Level */
+.service-good {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.service-warning {
+  color: #ed6c02;
+  font-weight: 600;
+}
+
+/* Payment */
+.payment-good {
+  color: #2e7d32;
+}
+
+.payment-slow {
+  color: #ed6c02;
+  font-weight: 600;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: #1976d2;
+  color: #1976d2;
+  background: #e3f2fd;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  font-size: 16px;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .client-table-container {
+    overflow-x: auto;
+  }
+  
+  .client-table {
+    min-width: 1200px;
+  }
+}

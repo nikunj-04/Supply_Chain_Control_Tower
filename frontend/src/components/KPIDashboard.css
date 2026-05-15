@@ -1,0 +1,176 @@
+.kpi-dashboard-container {
+  padding: 10px 0 20px 0;
+}
+
+.kpi-dashboard-header {
+  margin-bottom: 24px;
+}
+
+.kpi-dashboard-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 12px 0;
+}
+
+.kpi-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.kpi-last-updated {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.kpi-legend {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.legend-dot {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.legend-dot.on-target {
+  color: #10b981;
+}
+
+.legend-dot.attention {
+  color: #f59e0b;
+}
+
+.legend-dot.critical {
+  color: #ef4444;
+}
+
+.kpi-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1400px) {
+  .kpi-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.kpi-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.kpi-category-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.kpi-metrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kpi-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.kpi-metric-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.kpi-status-dot {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.kpi-metric-name {
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.kpi-metric-value {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+  .kpi-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .kpi-legend {
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,394 @@
+.carrier-scorecards {
+  padding: 12px;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.scorecard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.scorecard-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 2px 0;
+}
+
+.last-updated {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 6px;
+  padding: 8px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.summary-card .card-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.summary-card .card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.summary-card .card-label {
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.summary-card .card-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.summary-card .card-value.carrier-name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Trend Section */
+.trend-section {
+  background: white;
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+}
+
+.trend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.trend-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.trend-stat {
+  font-size: 11px;
+  color: #666;
+}
+
+.trend-value {
+  font-weight: 700;
+  color: #1976d2;
+  font-size: 12px;
+}
+
+.trend-chart {
+  display: flex;
+  align-items: flex-end;
+  height: 100px;
+  gap: 2px;
+  padding: 6px 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.trend-bar-container {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+}
+
+.trend-bar {
+  width: 100%;
+  min-height: 5px;
+  border-radius: 2px 2px 0 0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.trend-bar:hover {
+  opacity: 0.8;
+}
+
+.trend-bar:hover .trend-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.trend-tooltip {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+/* Carriers Table Section */
+.carriers-table-section {
+  background: white;
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.table-controls h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-buttons button {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.filter-buttons button:hover {
+  background: #f5f5f5;
+}
+
+.filter-buttons button.active {
+  background: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+/* Table */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.carriers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.carriers-table thead {
+  background: #f8f9fa;
+}
+
+.carriers-table th {
+  padding: 7px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.carriers-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.carriers-table th.sortable:hover {
+  background: #e8eaf0;
+}
+
+.carriers-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.carriers-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.carrier-name-cell {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Score Cell */
+.score-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score-bar-mini {
+  width: 55px;
+  height: 7px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.score-fill.status-excellent {
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
+}
+
+.score-fill.status-good {
+  background: linear-gradient(90deg, #2196f3, #42a5f5);
+}
+
+.score-fill.status-fair {
+  background: linear-gradient(90deg, #ff9800, #ffa726);
+}
+
+.score-fill.status-poor {
+  background: linear-gradient(90deg, #f44336, #ef5350);
+}
+
+.score-value {
+  font-weight: 700;
+  color: #1a1a1a;
+  min-width: 32px;
+}
+
+/* Rate Colors */
+.rate-excellent {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.rate-good {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.rate-poor {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.exceptions-high {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-excellent {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.status-good {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.status-fair {
+  background: #fff9c4;
+  color: #f57f17;
+}
+
+.status-poor {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* No Data */
+.no-data {
+  text-align: center;
+  padding: 18px;
+  color: #999;
+  font-size: 13px;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  font-size: 16px;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 1600px) {
+  .summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .trend-chart {
+    height: 100px;
+  }
+  
+  .table-wrapper {
+    overflow-x: scroll;
+  }
+}
