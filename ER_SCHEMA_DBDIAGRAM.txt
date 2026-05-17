@@ -1,0 +1,414 @@
+// ============================================================
+// E-commerce Fulfillment Control Tower — Database Schema
+// Paste into https://dbdiagram.io
+// Note: Cross-DB references (marked [logical]) are enforced by
+// application code, not database-level FK constraints.
+// ============================================================
+
+// ─────────────────────────────────────────
+// AUTH DATABASE (auth.db)
+// ─────────────────────────────────────────
+
+Table users {
+  id            integer   [pk, increment]
+  username      varchar   [unique, not null]
+  email         varchar   [unique, not null]
+  full_name     varchar   [not null]
+  hashed_password varchar [not null]
+  is_active     boolean   [not null, default: true]
+  is_superuser  boolean   [not null, default: false]
+  client_id     varchar   [note: 'Restricts data to this client for customer_user role']
+  department    varchar
+  phone         varchar
+  created_at    datetime  [not null]
+  last_login    datetime
+}
+
+Table roles {
+  id            integer   [pk, increment]
+  name          varchar   [unique, not null, note: 'e.g. system_admin, operations_manager']
+  display_name  varchar   [not null]
+  description   varchar
+  is_active     boolean   [not null, default: true]
+  created_at    datetime  [not null]
+}
+
+Table permissions {
+  id            integer   [pk, increment]
+  name          varchar   [unique, not null, note: 'e.g. wms.view, exceptions.resolve']
+  display_name  varchar   [not null]
+  description   varchar
+  module        varchar   [not null, note: 'wms, tms, oms, billing, returns, yard, exceptions, reports']
+  action        varchar   [not null, note: 'view, create, edit, delete, approve, export, assign, resolve']
+  created_at    datetime  [not null]
+}
+
+Table user_roles {
+  user_id       integer   [ref: > users.id, not null]
+  role_id       integer   [ref: > roles.id, not null]
+  indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table role_permissions {
+  role_id       integer   [ref: > roles.id, not null]
+  permission_id integer   [ref: > permissions.id, not null]
+  indexes {
+    (role_id, permission_id) [pk]
+  }
+}
+
+Table user_sessions {
+  id            integer   [pk, increment]
+  user_id       integer   [ref: > users.id, not null]
+  token         varchar   [unique, not null]
+  refresh_token varchar   [unique, not null]
+  ip_address    varchar
+  user_agent    varchar
+  created_at    datetime  [not null]
+  expires_at    datetime  [not null]
+  is_active     boolean   [default: true]
+}
+
+Table audit_logs {
+  id            integer   [pk, increment]
+  user_id       integer   [ref: > users.id]
+  username      varchar
+  action        varchar   [not null, note: 'login, logout, exception_resolved, charge_billed, etc.']
+  resource_type varchar
+  resource_id   varchar
+  ip_address    varchar
+  user_agent    varchar
+  success       boolean   [not null]
+  error_message varchar
+  created_at    datetime  [not null]
+}
+
+
+// ─────────────────────────────────────────
+// OMS DATABASE (oms.db)
+// ─────────────────────────────────────────
+
+Table orders {
+  id                    integer  [pk, increment]
+  order_id              varchar  [unique, not null]
+  customer_id           varchar  [not null]
+  customer_name         varchar  [not null]
+  status                varchar  [not null, note: 'pending, processing, shipped, delivered, cancelled']
+  order_date            datetime [not null]
+  promised_delivery_date datetime [not null]
+  actual_delivery_date  datetime
+  total_items           integer  [not null]
+  total_value           float    [not null]
+  priority              varchar  [not null, default: 'normal', note: 'low, normal, high, urgent']
+  shipping_address      varchar  [not null]
+}
+
+Table order_lines {
+  id            integer  [pk, increment]
+  order_id      varchar  [ref: > orders.order_id, not null]
+  sku           varchar  [not null]
+  product_name  varchar  [not null]
+  quantity      integer  [not null]
+  unit_price    float    [not null]
+  line_total    float    [not null]
+}
+
+Table order_metrics {
+  id                      integer [pk, increment]
+  date                    datetime [not null]
+  total_orders            integer
+  orders_shipped          integer
+  orders_delivered        integer
+  orders_delayed          integer
+  on_time_delivery_pct    float
+  avg_processing_time_hours float
+  order_accuracy_pct      float
+}
+
+
+// ─────────────────────────────────────────
+// TMS DATABASE (tms.db)
+// ─────────────────────────────────────────
+
+Table shipments {
+  id                  integer  [pk, increment]
+  shipment_id         varchar  [unique, not null]
+  order_id            varchar  [not null, ref: > orders.order_id, note: '[logical cross-db ref]']
+  carrier             varchar  [not null]
+  tracking_number     varchar  [not null]
+  status              varchar  [not null, note: 'scheduled, in_transit, delivered, delayed, exception']
+  origin              varchar  [not null]
+  destination         varchar  [not null]
+  scheduled_pickup    datetime [not null]
+  actual_pickup       datetime
+  estimated_delivery  datetime [not null]
+  actual_delivery     datetime
+  weight_lbs          float    [not null]
+  cost                float    [not null]
+}
+
+Table routes {
+  id                    integer  [pk, increment]
+  route_id              varchar  [unique, not null]
+  driver                varchar  [not null]
+  vehicle               varchar  [not null]
+  status                varchar  [not null, note: 'planned, active, completed']
+  scheduled_start       datetime [not null]
+  actual_start          datetime
+  scheduled_end         datetime [not null]
+  actual_end            datetime
+  total_stops           integer  [not null]
+  completed_stops       integer  [default: 0]
+  total_distance_miles  float    [not null]
+}
+
+Table transport_metrics {
+  id                    integer [pk, increment]
+  date                  datetime [not null]
+  total_shipments       integer
+  on_time_deliveries    integer
+  delayed_shipments     integer
+  on_time_delivery_pct  float
+  avg_transit_time_hours float
+  total_transport_cost  float
+  cost_per_shipment     float
+}
+
+
+// ─────────────────────────────────────────
+// WMS DATABASE (wms.db)
+// ─────────────────────────────────────────
+
+Table inventory {
+  id                  integer  [pk, increment]
+  sku                 varchar  [not null]
+  product_name        varchar  [not null]
+  warehouse_location  varchar  [not null]
+  quantity_on_hand    integer  [not null]
+  quantity_reserved   integer  [not null, default: 0]
+  quantity_available  integer  [not null]
+  reorder_point       integer  [not null, default: 100]
+  last_updated        datetime [not null]
+}
+
+Table picking_tasks {
+  id          integer  [pk, increment]
+  order_id    varchar  [not null, ref: > orders.order_id, note: '[logical cross-db ref]']
+  sku         varchar  [not null, ref: > inventory.sku, note: '[logical cross-db ref]']
+  quantity    integer  [not null]
+  location    varchar  [not null]
+  status      varchar  [not null, note: 'pending, in_progress, completed, delayed']
+  assigned_to varchar
+  created_at  datetime [not null]
+  completed_at datetime
+  priority    varchar  [not null, default: 'normal']
+}
+
+Table warehouse_metrics {
+  id                      integer [pk, increment]
+  date                    datetime [not null]
+  total_picks             integer
+  picks_completed         integer
+  picks_delayed           integer
+  avg_pick_time_minutes   float
+  inventory_accuracy_pct  float
+  capacity_utilization_pct float
+}
+
+
+// ─────────────────────────────────────────
+// BILLING DATABASE (billing.db)
+// ─────────────────────────────────────────
+
+Table invoices {
+  id            integer  [pk, increment]
+  invoice_id    varchar  [unique, not null, note: 'Format: INV-YYYYMMDDHHmmss-UUID6']
+  customer_id   varchar  [not null]
+  customer_name varchar  [not null]
+  order_id      varchar  [not null, ref: > orders.order_id, note: '[logical cross-db ref]']
+  invoice_date  datetime [not null]
+  due_date      datetime [not null]
+  payment_date  datetime
+  status        varchar  [not null, note: 'pending, paid, overdue, disputed']
+  subtotal      float    [not null]
+  tax           float    [not null]
+  total         float    [not null]
+  amount_paid   float    [not null, default: 0.0]
+  balance       float    [not null]
+}
+
+Table billing_line_items {
+  id            integer  [pk, increment]
+  invoice_id    varchar  [ref: > invoices.invoice_id, not null]
+  service_type  varchar  [not null, note: 'storage, picking, packing, shipping, accessorial_charge']
+  description   varchar  [not null]
+  quantity      float    [not null]
+  unit_price    float    [not null]
+  line_total    float    [not null]
+}
+
+Table billing_metrics {
+  id                  integer [pk, increment]
+  date                datetime [not null]
+  total_invoices      integer
+  invoices_paid       integer
+  invoices_overdue    integer
+  total_revenue       float
+  revenue_collected   float
+  outstanding_balance float
+  collection_rate_pct float
+}
+
+
+// ─────────────────────────────────────────
+// RETURNS DATABASE (returns.db)
+// ─────────────────────────────────────────
+
+Table returns {
+  id            integer  [pk, increment]
+  return_id     varchar  [unique, not null]
+  order_id      varchar  [not null, ref: > orders.order_id, note: '[logical cross-db ref]']
+  customer_id   varchar  [not null]
+  customer_name varchar  [not null]
+  status        varchar  [not null, note: 'initiated, in_transit, received, inspected, processed, refunded']
+  reason        varchar  [not null, note: 'damaged, wrong_item, defective, not_needed, size_issue']
+  return_date   datetime [not null]
+  received_date datetime
+  processed_date datetime
+  total_value   float    [not null]
+  refund_amount float    [not null]
+  refund_status varchar  [not null, note: 'pending, approved, refunded']
+}
+
+Table return_line_items {
+  id              integer  [pk, increment]
+  return_id       varchar  [ref: > returns.return_id, not null]
+  sku             varchar  [not null]
+  product_name    varchar  [not null]
+  quantity        integer  [not null]
+  condition       varchar  [not null, note: 'resaleable, damaged, defective']
+  restocking_fee  float    [not null, default: 0.0]
+}
+
+Table return_metrics {
+  id                      integer [pk, increment]
+  date                    datetime [not null]
+  total_returns           integer
+  returns_processed       integer
+  returns_pending         integer
+  return_rate_pct         float
+  avg_processing_time_days float
+  total_refund_amount     float
+  resaleable_rate_pct     float
+}
+
+
+// ─────────────────────────────────────────
+// YARD DATABASE (yard.db)
+// ─────────────────────────────────────────
+
+Table dock_appointments {
+  id                        integer  [pk, increment]
+  appointment_id            varchar  [unique, not null]
+  dock_door                 varchar  [not null]
+  appointment_type          varchar  [not null, note: 'inbound, outbound']
+  carrier                   varchar  [not null]
+  trailer_number            varchar
+  status                    varchar  [not null, note: 'scheduled, checked_in, loading, unloading, completed, missed']
+  scheduled_time            datetime [not null]
+  actual_arrival            datetime
+  actual_start              datetime
+  actual_completion         datetime
+  expected_duration_minutes integer  [not null]
+  actual_duration_minutes   integer
+}
+
+Table yard_locations {
+  id                  integer  [pk, increment]
+  location_id         varchar  [unique, not null]
+  zone                varchar  [not null, note: 'A, B, C, D']
+  status              varchar  [not null, note: 'occupied, available, reserved, maintenance']
+  trailer_number      varchar
+  carrier             varchar
+  check_in_time       datetime
+  expected_departure  datetime
+  contents            varchar  [note: 'inbound_freight, outbound_freight, empty, maintenance']
+}
+
+Table yard_metrics {
+  id                      integer [pk, increment]
+  date                    datetime [not null]
+  total_appointments      integer
+  appointments_completed  integer
+  appointments_missed     integer
+  on_time_arrival_pct     float
+  avg_dock_time_minutes   float
+  yard_capacity           integer
+  yard_occupied           integer
+  yard_utilization_pct    float
+}
+
+
+// ─────────────────────────────────────────
+// EXCEPTION DATABASE (exceptions.db)
+// ─────────────────────────────────────────
+
+Table exceptions {
+  id                    integer  [pk, increment]
+  exception_id          varchar  [unique, not null, note: 'e.g. EXC-TMS-SHIP-20001']
+  exception_type        varchar  [not null, note: 'delay, inventory, quality, billing, capacity']
+  severity              varchar  [not null, note: 'critical, warning, info']
+  status                varchar  [not null, default: 'open', note: 'open, in_progress, resolved, dismissed']
+  source_system         varchar  [not null, note: 'TMS, WMS, OMS, Billing, Returns, Yard']
+  entity_type           varchar  [not null, note: 'shipment, order, inventory, invoice, return, appointment']
+  entity_id             varchar  [not null, note: 'ID of the record in the source system']
+  title                 varchar  [not null]
+  description           text     [not null]
+  impact                varchar
+  customer              varchar
+  location              varchar
+  carrier               varchar
+  days_delayed          integer
+  cost_impact           float
+  quantity_affected     integer
+  detected_at           datetime [not null]
+  expected_resolution   datetime
+  resolved_at           datetime
+  assigned_to           varchar  [note: 'Username of assigned user']
+  assigned_at           datetime
+  resolution_notes      text
+  resolution_action     varchar  [note: 'reassigned, expedited, refunded, restocked, etc.']
+  is_customer_notified  boolean  [default: false]
+  requires_escalation   boolean  [default: false]
+  is_recurring          boolean  [default: false]
+}
+
+Table exception_actions {
+  id              integer  [pk, increment]
+  exception_id    varchar  [ref: > exceptions.exception_id, not null]
+  action_type     varchar  [not null, note: 'status_change, reassign, comment, escalate, notify']
+  performed_by    varchar  [not null]
+  performed_at    datetime [not null]
+  notes           text
+  previous_value  varchar
+  new_value       varchar
+}
+
+Table exception_rules {
+  id                        integer  [pk, increment]
+  rule_id                   varchar  [unique, not null]
+  rule_name                 varchar  [not null]
+  exception_type            varchar  [not null]
+  severity                  varchar  [not null]
+  source_system             varchar  [not null]
+  condition_field           varchar  [not null]
+  condition_operator        varchar  [not null, note: 'gt, lt, eq, gte, lte']
+  condition_value           varchar  [not null]
+  auto_assign_to            varchar
+  auto_notify               boolean  [default: true]
+  auto_escalate_after_hours integer
+  is_active                 boolean  [default: true]
+  created_at                datetime [not null]
+}

@@ -1,0 +1,194 @@
+// ============================================================
+// E-commerce Fulfillment Control Tower — Relations: Part 1
+// Databases: AUTH · OMS · TMS
+// Paste into https://dbdiagram.io
+// All refs in this file are same-database unless noted [logical].
+// ============================================================
+
+
+// ─────────────────────────────────────────
+// AUTH DATABASE (auth.db)
+// ─────────────────────────────────────────
+
+Table users {
+  id              integer   [pk, increment]
+  username        varchar   [unique, not null]
+  email           varchar   [unique, not null]
+  full_name       varchar   [not null]
+  hashed_password varchar   [not null]
+  is_active       boolean   [not null, default: true]
+  is_superuser    boolean   [not null, default: false]
+  client_id       varchar
+  department      varchar
+  phone           varchar
+  created_at      datetime  [not null]
+  last_login      datetime
+}
+
+Table roles {
+  id           integer  [pk, increment]
+  name         varchar  [unique, not null]
+  display_name varchar  [not null]
+  description  varchar
+  is_active    boolean  [not null, default: true]
+  created_at   datetime [not null]
+}
+
+Table permissions {
+  id           integer  [pk, increment]
+  name         varchar  [unique, not null]
+  display_name varchar  [not null]
+  description  varchar
+  module       varchar  [not null]
+  action       varchar  [not null]
+  created_at   datetime [not null]
+}
+
+Table user_roles {
+  user_id integer [ref: > users.id, not null]
+  role_id integer [ref: > roles.id, not null]
+  indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table role_permissions {
+  role_id       integer [ref: > roles.id, not null]
+  permission_id integer [ref: > permissions.id, not null]
+  indexes {
+    (role_id, permission_id) [pk]
+  }
+}
+
+Table user_sessions {
+  id            integer  [pk, increment]
+  user_id       integer  [ref: > users.id, not null]
+  token         varchar  [unique, not null]
+  refresh_token varchar  [unique, not null]
+  ip_address    varchar
+  user_agent    varchar
+  created_at    datetime [not null]
+  expires_at    datetime [not null]
+  is_active     boolean  [default: true]
+}
+
+Table audit_logs {
+  id            integer  [pk, increment]
+  user_id       integer  [ref: > users.id]
+  username      varchar
+  action        varchar  [not null]
+  resource_type varchar
+  resource_id   varchar
+  ip_address    varchar
+  user_agent    varchar
+  success       boolean  [not null]
+  error_message varchar
+  created_at    datetime [not null]
+}
+
+// Auth DB — Relationship summary
+// user_roles      : user_id >- users.id  (many users can have many roles)
+// user_roles      : role_id >- roles.id
+// role_permissions: role_id >- roles.id  (many roles can have many permissions)
+// role_permissions: permission_id >- permissions.id
+// user_sessions   : user_id >- users.id  (one user → many sessions)
+// audit_logs      : user_id >- users.id  (one user → many audit events)
+
+
+// ─────────────────────────────────────────
+// OMS DATABASE (oms.db)
+// ─────────────────────────────────────────
+
+Table orders {
+  id                     integer  [pk, increment]
+  order_id               varchar  [unique, not null]
+  customer_id            varchar  [not null]
+  customer_name          varchar  [not null]
+  status                 varchar  [not null, note: 'pending, processing, shipped, delivered, cancelled']
+  order_date             datetime [not null]
+  promised_delivery_date datetime [not null]
+  actual_delivery_date   datetime
+  total_items            integer  [not null]
+  total_value            float    [not null]
+  priority               varchar  [not null, default: 'normal']
+  shipping_address       varchar  [not null]
+}
+
+Table order_lines {
+  id           integer [pk, increment]
+  order_id     varchar [ref: > orders.order_id, not null]
+  sku          varchar [not null]
+  product_name varchar [not null]
+  quantity     integer [not null]
+  unit_price   float   [not null]
+  line_total   float   [not null]
+}
+
+Table order_metrics {
+  id                        integer  [pk, increment]
+  date                      datetime [not null]
+  total_orders              integer
+  orders_shipped            integer
+  orders_delivered          integer
+  orders_delayed            integer
+  on_time_delivery_pct      float
+  avg_processing_time_hours float
+  order_accuracy_pct        float
+}
+
+// OMS DB — Relationship summary
+// order_lines: order_id >- orders.order_id  (one order → many line items)
+
+
+// ─────────────────────────────────────────
+// TMS DATABASE (tms.db)
+// Cross-DB note: shipments.order_id references orders.order_id (OMS DB).
+// This is a LOGICAL reference enforced by application code, not a DB FK.
+// ─────────────────────────────────────────
+
+Table shipments {
+  id                 integer  [pk, increment]
+  shipment_id        varchar  [unique, not null]
+  order_id           varchar  [ref: > orders.order_id, not null, note: '[logical — OMS DB]']
+  carrier            varchar  [not null]
+  tracking_number    varchar  [not null]
+  status             varchar  [not null, note: 'scheduled, in_transit, delivered, delayed, exception']
+  origin             varchar  [not null]
+  destination        varchar  [not null]
+  scheduled_pickup   datetime [not null]
+  actual_pickup      datetime
+  estimated_delivery datetime [not null]
+  actual_delivery    datetime
+  weight_lbs         float    [not null]
+  cost               float    [not null]
+}
+
+Table routes {
+  id                   integer  [pk, increment]
+  route_id             varchar  [unique, not null]
+  driver               varchar  [not null]
+  vehicle              varchar  [not null]
+  status               varchar  [not null, note: 'planned, active, completed']
+  scheduled_start      datetime [not null]
+  actual_start         datetime
+  scheduled_end        datetime [not null]
+  actual_end           datetime
+  total_stops          integer  [not null]
+  completed_stops      integer  [default: 0]
+  total_distance_miles float    [not null]
+}
+
+Table transport_metrics {
+  id                     integer  [pk, increment]
+  date                   datetime [not null]
+  total_shipments        integer
+  on_time_deliveries     integer
+  delayed_shipments      integer
+  on_time_delivery_pct   float
+  avg_transit_time_hours float
+  total_transport_cost   float
+  cost_per_shipment      float
+}
+
+// TMS DB — Relationship summary
+// shipments: order_id >- orders.order_id  [logical cross-db — OMS DB]

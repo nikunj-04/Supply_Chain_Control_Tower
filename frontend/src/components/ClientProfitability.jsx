@@ -11,7 +11,22 @@ function ClientProfitability({ data }) {
     return <div className="loading">Loading client profitability data...</div>;
   }
 
-  const { summary, clients } = data;
+  const { summary = {}, clients = [] } = data;
+
+  const toNumber = (value, fallback = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const summaryRevenueYtd = toNumber(
+    summary.total_revenue_ytd ?? summary.total_revenue_mtd,
+    0
+  );
+  const summaryProfitYtd = toNumber(
+    summary.total_profit_ytd ?? summary.total_profit_mtd,
+    0
+  );
+  const summaryAvgMargin = toNumber(summary.avg_margin_pct, 0);
 
   // Sort clients
   const sortedClients = [...clients].sort((a, b) => {
@@ -21,12 +36,14 @@ function ClientProfitability({ data }) {
     // Handle string sorting (for customer_name)
     if (sortBy === 'customer_name') {
       return sortOrder === 'asc' 
-        ? aVal.localeCompare(bVal)
-        : bVal.localeCompare(aVal);
+        ? (aVal || '').localeCompare(bVal || '')
+        : (bVal || '').localeCompare(aVal || '');
     }
     
     // Handle numeric sorting
-    return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    const aNum = toNumber(aVal, 0);
+    const bNum = toNumber(bVal, 0);
+    return sortOrder === 'asc' ? aNum - bNum : bNum - aNum;
   });
 
   // Pagination
@@ -49,7 +66,7 @@ function ClientProfitability({ data }) {
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(toNumber(amount, 0));
   };
 
   const getMarginColor = (margin) => {
@@ -59,10 +76,11 @@ function ClientProfitability({ data }) {
   };
 
   const getGrowthBadge = (growth) => {
-    if (growth > 0) {
-      return <span className="growth-badge positive">↑ {growth.toFixed(1)}%</span>;
-    } else if (growth < 0) {
-      return <span className="growth-badge negative">↓ {Math.abs(growth).toFixed(1)}%</span>;
+    const growthValue = toNumber(growth, 0);
+    if (growthValue > 0) {
+      return <span className="growth-badge positive">↑ {growthValue.toFixed(1)}%</span>;
+    } else if (growthValue < 0) {
+      return <span className="growth-badge negative">↓ {Math.abs(growthValue).toFixed(1)}%</span>;
     }
     return <span className="growth-badge neutral">→ 0%</span>;
   };
@@ -79,25 +97,25 @@ function ClientProfitability({ data }) {
         <div className="summary-card revenue">
           <div className="card-icon">💵</div>
           <div className="card-content">
-            <div className="card-value">{formatCurrency(summary.total_revenue_ytd)}</div>
+            <div className="card-value">{formatCurrency(summaryRevenueYtd)}</div>
             <div className="card-label">Total Revenue YTD</div>
-            <div className="card-count">{summary.total_clients} active clients</div>
+            <div className="card-count">{toNumber(summary.total_clients, 0)} active clients</div>
           </div>
         </div>
 
         <div className="summary-card profit">
           <div className="card-icon">📊</div>
           <div className="card-content">
-            <div className="card-value">{formatCurrency(summary.total_profit_ytd)}</div>
+            <div className="card-value">{formatCurrency(summaryProfitYtd)}</div>
             <div className="card-label">Total Profit YTD</div>
-            <div className="card-sublabel">{summary.avg_margin_pct.toFixed(1)}% avg margin</div>
+            <div className="card-sublabel">{summaryAvgMargin.toFixed(1)}% avg margin</div>
           </div>
         </div>
 
         <div className="summary-card top-client">
           <div className="card-icon">🏆</div>
           <div className="card-content">
-            <div className="card-value-text">{summary.top_revenue_client}</div>
+            <div className="card-value-text">{summary.top_revenue_client || 'N/A'}</div>
             <div className="card-label">Top Revenue Client</div>
             <div className="card-sublabel">By YTD revenue</div>
           </div>
@@ -106,7 +124,7 @@ function ClientProfitability({ data }) {
         <div className="summary-card margin-leader">
           <div className="card-icon">⭐</div>
           <div className="card-content">
-            <div className="card-value-text">{summary.top_margin_client}</div>
+            <div className="card-value-text">{summary.top_margin_client || 'N/A'}</div>
             <div className="card-label">Highest Margin</div>
             <div className="card-sublabel">Best profitability</div>
           </div>
@@ -161,21 +179,21 @@ function ClientProfitability({ data }) {
                 <td className="revenue">{formatCurrency(client.revenue_mtd)}</td>
                 <td className="profit">{formatCurrency(client.profit_ytd)}</td>
                 <td>
-                  <span className={`margin-badge ${getMarginColor(client.margin_pct)}`}>
-                    {client.margin_pct.toFixed(1)}%
+                  <span className={`margin-badge ${getMarginColor(toNumber(client.margin_pct, 0))}`}>
+                    {toNumber(client.margin_pct, 0).toFixed(1)}%
                   </span>
                 </td>
-                <td>{client.orders_ytd}</td>
+                <td>{toNumber(client.orders_ytd, 0)}</td>
                 <td>{formatCurrency(client.avg_order_value)}</td>
                 <td>{getGrowthBadge(client.growth_mom)}</td>
                 <td>
-                  <span className={client.service_level_pct >= 95 ? 'service-good' : 'service-warning'}>
-                    {client.service_level_pct.toFixed(1)}%
+                  <span className={toNumber(client.service_level_pct, 0) >= 95 ? 'service-good' : 'service-warning'}>
+                    {toNumber(client.service_level_pct, 0).toFixed(1)}%
                   </span>
                 </td>
                 <td>
-                  <span className={client.days_to_pay <= 30 ? 'payment-good' : 'payment-slow'}>
-                    {client.days_to_pay} days
+                  <span className={toNumber(client.days_to_pay, 30) <= 30 ? 'payment-good' : 'payment-slow'}>
+                    {toNumber(client.days_to_pay, 30)} days
                   </span>
                 </td>
               </tr>

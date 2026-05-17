@@ -98,7 +98,7 @@ function Sidebar({ activeView, setActiveView, currentUser }) {
       .map(section => {
         // Filter items within the section
         const filteredItems = section.items.filter(item => 
-          hasAnyPermission(item.requiredPermissions) //should be hasPermission according to me but we want to show items if user has any of the required permissions
+          hasAnyPermission(item.requiredPermissions)
         );
         
         // Only include section if user has permission and has visible items

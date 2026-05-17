@@ -1,0 +1,277 @@
+// ============================================================
+// E-commerce Fulfillment Control Tower — Relations: Part 2
+// Databases: WMS · BILLING · RETURNS · YARD · EXCEPTIONS
+// Paste into https://dbdiagram.io
+// Cross-DB logical refs to OMS (orders) and WMS (inventory)
+// are enforced by application code, not DB-level FK constraints.
+// ============================================================
+
+
+// ─────────────────────────────────────────
+// OMS ANCHOR (logical cross-db reference target)
+// Included as a stub so dbdiagram.io can render cross-db arrows.
+// ─────────────────────────────────────────
+
+Table orders [note: 'OMS DB — anchor for cross-db logical refs'] {
+  order_id varchar [pk, not null]
+}
+
+
+// ─────────────────────────────────────────
+// WMS DATABASE (wms.db)
+// Cross-DB note: picking_tasks.order_id → orders.order_id (OMS DB)
+// ─────────────────────────────────────────
+
+Table inventory {
+  id                   integer  [pk, increment]
+  sku                  varchar  [not null]
+  product_name         varchar  [not null]
+  warehouse_location   varchar  [not null]
+  quantity_on_hand     integer  [not null]
+  quantity_reserved    integer  [not null, default: 0]
+  quantity_available   integer  [not null]
+  reorder_point        integer  [not null, default: 100]
+  last_updated         datetime [not null]
+}
+
+Table picking_tasks {
+  id           integer  [pk, increment]
+  order_id     varchar  [ref: > orders.order_id, not null, note: '[logical — OMS DB]']
+  sku          varchar  [ref: > inventory.sku, not null, note: '[logical — WMS DB]']
+  quantity     integer  [not null]
+  location     varchar  [not null]
+  status       varchar  [not null, note: 'pending, in_progress, completed, delayed']
+  assigned_to  varchar
+  created_at   datetime [not null]
+  completed_at datetime
+  priority     varchar  [not null, default: 'normal']
+}
+
+Table warehouse_metrics {
+  id                       integer  [pk, increment]
+  date                     datetime [not null]
+  total_picks              integer
+  picks_completed          integer
+  picks_delayed            integer
+  avg_pick_time_minutes    float
+  inventory_accuracy_pct   float
+  capacity_utilization_pct float
+}
+
+// WMS DB — Relationship summary
+// picking_tasks: order_id >- orders.order_id  [logical cross-db — OMS DB]
+// picking_tasks: sku      >- inventory.sku    [logical cross-db — WMS DB]
+
+
+// ─────────────────────────────────────────
+// BILLING DATABASE (billing.db)
+// Cross-DB note: invoices.order_id → orders.order_id (OMS DB)
+// ─────────────────────────────────────────
+
+Table invoices {
+  id            integer  [pk, increment]
+  invoice_id    varchar  [unique, not null, note: 'Format: INV-YYYYMMDDHHmmss-UUID6']
+  customer_id   varchar  [not null]
+  customer_name varchar  [not null]
+  order_id      varchar  [ref: > orders.order_id, not null, note: '[logical — OMS DB]']
+  invoice_date  datetime [not null]
+  due_date      datetime [not null]
+  payment_date  datetime
+  status        varchar  [not null, note: 'pending, paid, overdue, disputed']
+  subtotal      float    [not null]
+  tax           float    [not null]
+  total         float    [not null]
+  amount_paid   float    [not null, default: 0.0]
+  balance       float    [not null]
+}
+
+Table billing_line_items {
+  id           integer [pk, increment]
+  invoice_id   varchar [ref: > invoices.invoice_id, not null]
+  service_type varchar [not null, note: 'storage, picking, packing, shipping, accessorial_charge']
+  description  varchar [not null]
+  quantity     float   [not null]
+  unit_price   float   [not null]
+  line_total   float   [not null]
+}
+
+Table billing_metrics {
+  id                  integer  [pk, increment]
+  date                datetime [not null]
+  total_invoices      integer
+  invoices_paid       integer
+  invoices_overdue    integer
+  total_revenue       float
+  revenue_collected   float
+  outstanding_balance float
+  collection_rate_pct float
+}
+
+// Billing DB — Relationship summary
+// invoices           : order_id   >- orders.order_id    [logical cross-db — OMS DB]
+// billing_line_items : invoice_id >- invoices.invoice_id (one invoice → many line items)
+
+
+// ─────────────────────────────────────────
+// RETURNS DATABASE (returns.db)
+// Cross-DB note: returns.order_id → orders.order_id (OMS DB)
+// ─────────────────────────────────────────
+
+Table returns {
+  id             integer  [pk, increment]
+  return_id      varchar  [unique, not null]
+  order_id       varchar  [ref: > orders.order_id, not null, note: '[logical — OMS DB]']
+  customer_id    varchar  [not null]
+  customer_name  varchar  [not null]
+  status         varchar  [not null, note: 'initiated, in_transit, received, inspected, processed, refunded']
+  reason         varchar  [not null, note: 'damaged, wrong_item, defective, not_needed, size_issue']
+  return_date    datetime [not null]
+  received_date  datetime
+  processed_date datetime
+  total_value    float    [not null]
+  refund_amount  float    [not null]
+  refund_status  varchar  [not null, note: 'pending, approved, refunded']
+}
+
+Table return_line_items {
+  id             integer [pk, increment]
+  return_id      varchar [ref: > returns.return_id, not null]
+  sku            varchar [not null]
+  product_name   varchar [not null]
+  quantity       integer [not null]
+  condition      varchar [not null, note: 'resaleable, damaged, defective']
+  restocking_fee float   [not null, default: 0.0]
+}
+
+Table return_metrics {
+  id                       integer  [pk, increment]
+  date                     datetime [not null]
+  total_returns            integer
+  returns_processed        integer
+  returns_pending          integer
+  return_rate_pct          float
+  avg_processing_time_days float
+  total_refund_amount      float
+  resaleable_rate_pct      float
+}
+
+// Returns DB — Relationship summary
+// returns           : order_id  >- orders.order_id   [logical cross-db — OMS DB]
+// return_line_items : return_id >- returns.return_id (one return → many line items)
+
+
+// ─────────────────────────────────────────
+// YARD DATABASE (yard.db)
+// No cross-DB references — fully self-contained.
+// ─────────────────────────────────────────
+
+Table dock_appointments {
+  id                        integer  [pk, increment]
+  appointment_id            varchar  [unique, not null]
+  dock_door                 varchar  [not null]
+  appointment_type          varchar  [not null, note: 'inbound, outbound']
+  carrier                   varchar  [not null]
+  trailer_number            varchar
+  status                    varchar  [not null, note: 'scheduled, checked_in, loading, unloading, completed, missed']
+  scheduled_time            datetime [not null]
+  actual_arrival            datetime
+  actual_start              datetime
+  actual_completion         datetime
+  expected_duration_minutes integer  [not null]
+  actual_duration_minutes   integer
+}
+
+Table yard_locations {
+  id                 integer  [pk, increment]
+  location_id        varchar  [unique, not null]
+  zone               varchar  [not null, note: 'A, B, C, D']
+  status             varchar  [not null, note: 'occupied, available, reserved, maintenance']
+  trailer_number     varchar
+  carrier            varchar
+  check_in_time      datetime
+  expected_departure datetime
+  contents           varchar  [note: 'inbound_freight, outbound_freight, empty, maintenance']
+}
+
+Table yard_metrics {
+  id                     integer  [pk, increment]
+  date                   datetime [not null]
+  total_appointments     integer
+  appointments_completed integer
+  appointments_missed    integer
+  on_time_arrival_pct    float
+  avg_dock_time_minutes  float
+  yard_capacity          integer
+  yard_occupied          integer
+  yard_utilization_pct   float
+}
+
+// Yard DB — No internal FK relationships. Standalone operational tables.
+
+
+// ─────────────────────────────────────────
+// EXCEPTION DATABASE (exceptions.db)
+// No cross-DB FK refs — entity_id is a string key resolved at app layer.
+// ─────────────────────────────────────────
+
+Table exceptions {
+  id                   integer  [pk, increment]
+  exception_id         varchar  [unique, not null, note: 'e.g. EXC-TMS-SHIP-20001']
+  exception_type       varchar  [not null, note: 'delay, inventory, quality, billing, capacity']
+  severity             varchar  [not null, note: 'critical, warning, info']
+  status               varchar  [not null, default: 'open', note: 'open, in_progress, resolved, dismissed']
+  source_system        varchar  [not null, note: 'TMS, WMS, OMS, Billing, Returns, Yard']
+  entity_type          varchar  [not null, note: 'shipment, order, inventory, invoice, return, appointment']
+  entity_id            varchar  [not null, note: 'ID of the record in the source system']
+  title                varchar  [not null]
+  description          text     [not null]
+  impact               varchar
+  customer             varchar
+  location             varchar
+  carrier              varchar
+  days_delayed         integer
+  cost_impact          float
+  quantity_affected    integer
+  detected_at          datetime [not null]
+  expected_resolution  datetime
+  resolved_at          datetime
+  assigned_to          varchar
+  assigned_at          datetime
+  resolution_notes     text
+  resolution_action    varchar  [note: 'reassigned, expedited, refunded, restocked, etc.']
+  is_customer_notified boolean  [default: false]
+  requires_escalation  boolean  [default: false]
+  is_recurring         boolean  [default: false]
+}
+
+Table exception_actions {
+  id             integer  [pk, increment]
+  exception_id   varchar  [ref: > exceptions.exception_id, not null]
+  action_type    varchar  [not null, note: 'status_change, reassign, comment, escalate, notify']
+  performed_by   varchar  [not null]
+  performed_at   datetime [not null]
+  notes          text
+  previous_value varchar
+  new_value      varchar
+}
+
+Table exception_rules {
+  id                        integer  [pk, increment]
+  rule_id                   varchar  [unique, not null]
+  rule_name                 varchar  [not null]
+  exception_type            varchar  [not null]
+  severity                  varchar  [not null]
+  source_system             varchar  [not null]
+  condition_field           varchar  [not null]
+  condition_operator        varchar  [not null, note: 'gt, lt, eq, gte, lte']
+  condition_value           varchar  [not null]
+  auto_assign_to            varchar
+  auto_notify               boolean  [default: true]
+  auto_escalate_after_hours integer
+  is_active                 boolean  [default: true]
+  created_at                datetime [not null]
+}
+
+// Exceptions DB — Relationship summary
+// exception_actions: exception_id >- exceptions.exception_id (one exception → many action history entries)
+// exception_rules  : standalone config table, no FK relationships

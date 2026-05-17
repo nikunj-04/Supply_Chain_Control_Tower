@@ -134,17 +134,25 @@ class LiveDataPopulator:
         for _ in range(count):
             shipment_id = f"SHIP-{random.randint(20000, 29999)}"
             carrier = random.choice(self.carriers)
+            is_problem_shipment = random.random() < 0.5
+            scheduled_pickup = datetime.now() - timedelta(hours=random.randint(4, 48)) if is_problem_shipment else datetime.now() + timedelta(days=1)
+            estimated_delivery = scheduled_pickup + timedelta(days=random.randint(2, 5))
+            status = random.choice(['delayed', 'exception']) if is_problem_shipment else 'scheduled'
+            actual_pickup = scheduled_pickup + timedelta(hours=random.randint(3, 8)) if is_problem_shipment else None
+            actual_delivery = estimated_delivery + timedelta(hours=random.randint(3, 9)) if is_problem_shipment and random.random() < 0.7 else None
             
             shipment = Shipment(
                 shipment_id=shipment_id,
                 order_id=order_ids[0] if order_ids else f"ORD-{random.randint(10000, 19999)}",
                 carrier=carrier,
                 tracking_number=f"{carrier[:3].upper()}{random.randint(100000000, 999999999)}",
-                status='scheduled',
+                status=status,
                 origin=random.choice(self.warehouses),
                 destination=f"{fake.city()}, {fake.state_abbr()}",
-                scheduled_pickup=datetime.now() + timedelta(days=1),
-                estimated_delivery=datetime.now() + timedelta(days=random.randint(3, 7)),
+                scheduled_pickup=scheduled_pickup,
+                actual_pickup=actual_pickup,
+                estimated_delivery=estimated_delivery,
+                actual_delivery=actual_delivery,
                 weight_lbs=random.uniform(5, 500),
                 cost=random.uniform(50, 500)
             )
@@ -415,7 +423,9 @@ class LiveDataPopulator:
             
         except Exception as e:
             print(f"\n❌ Error during population: {e}")
-            raise
+                    appointment_time = datetime.now() - timedelta(hours=random.randint(1, 72))
+                    expected_duration = random.randint(60, 120)
+                    actual_duration = expected_duration + random.randint(30, 180)
         finally:
             self.close_sessions()
     
@@ -423,11 +433,11 @@ class LiveDataPopulator:
         """Close all database sessions"""
         for session in self.sessions.values():
             session.close()
-
+                        status='completed',
 def main():
-    """Main entry point"""
-    populator = LiveDataPopulator()
-    populator.populate_all()
-
-if __name__ == "__main__":
+                        actual_arrival=appointment_time + timedelta(minutes=random.randint(0, 45)),
+                        actual_start=appointment_time + timedelta(minutes=random.randint(10, 60)),
+                        actual_completion=appointment_time + timedelta(minutes=actual_duration),
+                        expected_duration_minutes=expected_duration,
+                        actual_duration_minutes=actual_duration
     main()

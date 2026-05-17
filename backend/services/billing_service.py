@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from typing import Dict, Any
 import os
+import uuid
 
 from logger import setup_logger
 from utils.pdf_generator import InvoicePDFGenerator
@@ -17,12 +18,11 @@ class BillingService:
     def __init__(self):
         """Initialize billing service."""
         self.pdf_generator = InvoicePDFGenerator(output_dir="invoices")
-        self.invoice_counter = 10000  # Start invoice numbers at 10000
     
     def _generate_invoice_number(self) -> str:
         """Generate unique invoice number."""
-        self.invoice_counter += 1
-        return f"INV-{datetime.now().strftime('%Y%m')}-{self.invoice_counter}"
+        # Timestamp + short random suffix avoids collisions across restarts.
+        return f"INV-{datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6].upper()}"
     
     async def process_accessorial_charge(self, charge_id: str) -> Dict[str, Any]:
         """
@@ -139,7 +139,7 @@ class BillingService:
                 invoice_id=invoice_number,
                 customer_id=charge_data.get('carrier', 'UNKNOWN').replace(' ', '_').upper(),
                 customer_name=charge_data.get('carrier', 'Unknown Carrier'),
-                order_id=charge_data.get('shipment_id', 'N/A'),
+                order_id=charge_data.get('shipment_id') or charge_data.get('charge_id') or 'N/A',
                 invoice_date=datetime.now(),
                 due_date=datetime.now() + timedelta(days=30),
                 status='pending',

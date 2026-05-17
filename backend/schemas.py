@@ -139,6 +139,8 @@ class ProfitabilitySummary(BaseModel):
     """Summary of client profitability."""
     total_revenue_mtd: float
     total_profit_mtd: float
+    total_revenue_ytd: float
+    total_profit_ytd: float
     avg_margin_pct: float
     total_clients: int
     top_revenue_client: str

@@ -37,6 +37,11 @@ from services.auth_service import auth_service
 # TEMPORARILY DISABLED - RAG features require additional dependencies
 # from services.rag_chat_service import get_rag_chat_service
 from models.billing_models import init_billing_db
+from models.wms_models import init_wms_db
+from models.oms_models import init_oms_db
+from models.returns_models import init_returns_db
+from models.yard_models import init_yard_db
+from models.tms_models import init_tms_db
 
 # Setup logger
 logger = setup_logger(__name__)
@@ -50,6 +55,38 @@ try:
     logger.info("Billing database initialized")
 except Exception as e:
     logger.error(f"Failed to initialize billing database: {e}")
+
+# Initialize the remaining system databases so dashboard endpoints can query safely.
+try:
+    init_wms_db(settings.wms_db_path)
+    logger.info("WMS database initialized")
+except Exception as e:
+    logger.error(f"Failed to initialize WMS database: {e}")
+
+try:
+    init_oms_db(settings.oms_db_path)
+    logger.info("OMS database initialized")
+except Exception as e:
+    logger.error(f"Failed to initialize OMS database: {e}")
+
+# Initialize TMS database so carrier scorecards can query shipments safely.
+try:
+    init_tms_db(settings.tms_db_path)
+    logger.info("TMS database initialized")
+except Exception as e:
+    logger.error(f"Failed to initialize TMS database: {e}")
+
+try:
+    init_returns_db(settings.returns_db_path)
+    logger.info("Returns database initialized")
+except Exception as e:
+    logger.error(f"Failed to initialize Returns database: {e}")
+
+try:
+    init_yard_db(settings.yard_db_path)
+    logger.info("Yard database initialized")
+except Exception as e:
+    logger.error(f"Failed to initialize Yard database: {e}")
 
 # Initialize services
 billing_service = BillingService()

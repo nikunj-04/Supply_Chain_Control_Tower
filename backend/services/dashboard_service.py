@@ -1331,15 +1331,17 @@ class DashboardService:
                 client_id = self._get_client_id()
                 base_invoice_query = base_invoice_query.filter(Invoice.customer_id == client_id)
 
-            # Anchor rolling windows to latest available invoice data.
+            # Use today for rolling window calculations (30D = last 30 days from today, not from last invoice).
+            today = datetime.utcnow()
             latest_invoice_date = base_invoice_query.with_entities(
                 func.max(Invoice.invoice_date)
-            ).scalar() or datetime.utcnow()
-            latest_invoice_date = min(latest_invoice_date, datetime.utcnow())
+            ).scalar() or today
 
-            rolling_30_start = latest_invoice_date - timedelta(days=30)
-            previous_30_start = latest_invoice_date - timedelta(days=60)
-            year_start = datetime(latest_invoice_date.year, 1, 1)
+            # 30D windows use today's date for "last 30 days" semantics.
+            rolling_30_start = today - timedelta(days=30)
+            previous_30_start = today - timedelta(days=60)
+            # YTD uses the year of the latest invoice or today, whichever is more recent.
+            year_start = datetime(today.year, 1, 1)
 
             # Use customer_id as the canonical key; names can vary across random seed runs.
             customers = base_invoice_query.with_entities(Invoice.customer_id).distinct().all()
@@ -1356,7 +1358,7 @@ class DashboardService:
                 ).filter(
                     Invoice.customer_id == customer_id,
                     Invoice.invoice_date >= rolling_30_start,
-                    Invoice.invoice_date <= latest_invoice_date
+                    Invoice.invoice_date <= today
                 ).scalar() or 0.0
                 
                 revenue_ytd_result = billing_session.query(
@@ -1364,7 +1366,7 @@ class DashboardService:
                 ).filter(
                     Invoice.customer_id == customer_id,
                     Invoice.invoice_date >= year_start,
-                    Invoice.invoice_date <= latest_invoice_date
+                    Invoice.invoice_date <= today
                 ).scalar() or 0.0
                 
                 revenue_last_month = billing_session.query(
@@ -1380,7 +1382,7 @@ class DashboardService:
                     row[0] for row in billing_session.query(Invoice.order_id).filter(
                         Invoice.customer_id == customer_id,
                         Invoice.invoice_date >= rolling_30_start,
-                        Invoice.invoice_date <= latest_invoice_date
+                        Invoice.invoice_date <= today
                     ).distinct().all()
                 ]
 
@@ -1388,7 +1390,7 @@ class DashboardService:
                     row[0] for row in billing_session.query(Invoice.order_id).filter(
                         Invoice.customer_id == customer_id,
                         Invoice.invoice_date >= year_start,
-                        Invoice.invoice_date <= latest_invoice_date
+                        Invoice.invoice_date <= today
                     ).distinct().all()
                 ]
 
@@ -2050,7 +2052,7 @@ class DashboardService:
         try:
             carriers_data = self._get_carrier_metrics()
             summary = self._calculate_carrier_summary(carriers_data)
-            trends = self._get_carrier_trends()
+            trends = self._get_carrier_trends(fallback_on_time_rate=summary.get("overall_on_time_rate", 0))
             
             return {
                 "timestamp": datetime.utcnow(),
@@ -2067,6 +2069,8 @@ class DashboardService:
         session = get_tms_session(settings.tms_db_path)
         
         try:
+            now = datetime.utcnow()
+
             # Get all carriers with their shipment counts
             carriers = session.query(
                 Shipment.carrier,
@@ -2076,42 +2080,70 @@ class DashboardService:
             carrier_metrics = []
             
             for carrier_name, total_shipments in carriers:
-                # Get on-time and delayed deliveries
-                on_time = session.query(Shipment).filter(
-                    Shipment.carrier == carrier_name,
-                    Shipment.status == "delivered",
-                    Shipment.actual_delivery <= Shipment.estimated_delivery
-                ).count()
-                
-                delayed = session.query(Shipment).filter(
-                    Shipment.carrier == carrier_name,
-                    Shipment.status.in_(["delayed", "delivered"]),
-                    Shipment.actual_delivery > Shipment.estimated_delivery
-                ).count()
-                
-                # Calculate on-time rate
-                delivered_count = on_time + delayed
-                on_time_rate = (on_time / delivered_count * 100) if delivered_count > 0 else 0
-                
-                # Calculate average transit time
-                completed_shipments = session.query(Shipment).filter(
-                    Shipment.carrier == carrier_name,
-                    Shipment.actual_pickup.isnot(None),
-                    Shipment.actual_delivery.isnot(None)
-                ).all()
-                
-                if completed_shipments:
-                    total_hours = sum([
-                        (s.actual_delivery - s.actual_pickup).total_seconds() / 3600
-                        for s in completed_shipments
-                    ])
-                    avg_transit_time = total_hours / len(completed_shipments)
-                else:
-                    avg_transit_time = 0
-                
-                # Calculate costs
-                total_cost = session.query(func.sum(Shipment.cost)).filter(
+                carrier_shipments = session.query(Shipment).filter(
                     Shipment.carrier == carrier_name
+                ).all()
+
+                # Prefer completed deliveries when they exist.
+                completed_shipments = [
+                    shipment for shipment in carrier_shipments
+                    if shipment.actual_delivery is not None
+                ]
+
+                delivered_shipments = [
+                    shipment for shipment in completed_shipments
+                    if shipment.status == "delivered"
+                ]
+
+                delayed_shipments = [
+                    shipment for shipment in completed_shipments
+                    if shipment.status in ["delayed", "exception"]
+                    or (shipment.actual_delivery and shipment.actual_delivery > shipment.estimated_delivery)
+                ]
+
+                if completed_shipments:
+                    on_time = sum(
+                        1 for shipment in delivered_shipments
+                        if shipment.actual_delivery <= shipment.estimated_delivery
+                    )
+                    delayed = len(delayed_shipments)
+                    delivered_count = on_time + delayed
+                    on_time_rate = (on_time / delivered_count * 100) if delivered_count > 0 else 0
+
+                    transit_samples = [
+                        (shipment.actual_delivery - shipment.actual_pickup).total_seconds() / 3600
+                        for shipment in completed_shipments
+                        if shipment.actual_pickup is not None and shipment.actual_delivery is not None
+                    ]
+                    avg_transit_time = sum(transit_samples) / len(transit_samples) if transit_samples else 0
+                else:
+                    # Fallback for active fleets: treat open shipments that are not overdue as on track.
+                    on_time = sum(
+                        1 for shipment in carrier_shipments
+                        if shipment.status not in ["delayed", "exception"]
+                        and shipment.estimated_delivery >= now
+                    )
+                    delayed = sum(
+                        1 for shipment in carrier_shipments
+                        if shipment.status in ["delayed", "exception"]
+                        or shipment.estimated_delivery < now
+                    )
+                    on_time_rate = (on_time / total_shipments * 100) if total_shipments > 0 else 0
+
+                    transit_samples = [
+                        (shipment.estimated_delivery - shipment.scheduled_pickup).total_seconds() / 3600
+                        for shipment in carrier_shipments
+                        if shipment.scheduled_pickup is not None and shipment.estimated_delivery is not None
+                    ]
+                    avg_transit_time = sum(transit_samples) / len(transit_samples) if transit_samples else 0
+
+                # Get on-time and delayed deliveries
+                on_time = max(on_time, 0)
+                delayed = max(delayed, 0)
+
+                # Cost and exception data still comes from all carrier shipments.
+                total_cost = session.query(func.sum(Shipment.cost)).filter(
+                    Shipment.carrier == carrier_name,
                 ).scalar() or 0
                 
                 cost_per_shipment = total_cost / total_shipments if total_shipments > 0 else 0
@@ -2208,7 +2240,7 @@ class DashboardService:
             "total_exceptions": total_exceptions
         }
 
-    def _get_carrier_trends(self) -> List[Dict[str, Any]]:
+    def _get_carrier_trends(self, fallback_on_time_rate: float = 0) -> List[Dict[str, Any]]:
         """Get carrier performance trends over the last 30 days."""
         session = get_tms_session(settings.tms_db_path)
         
@@ -2242,18 +2274,30 @@ class DashboardService:
                     shipment_count = metric.total_shipments
                 else:
                     # Fallback to shipment-level computation if no daily metric exists.
-                    delivered = session.query(Shipment).filter(
-                        Shipment.actual_delivery >= date_start,
-                        Shipment.actual_delivery <= date_end,
-                        Shipment.actual_delivery.isnot(None)
+                    shipments = session.query(Shipment).filter(
+                        Shipment.scheduled_pickup >= date_start,
+                        Shipment.scheduled_pickup <= date_end
                     ).all()
 
-                    shipment_count = len(delivered)
-                    if delivered:
-                        on_time_count = sum(1 for s in delivered if s.actual_delivery <= s.estimated_delivery)
-                        on_time_rate = (on_time_count / shipment_count * 100)
+                    shipment_count = len(shipments)
+                    if shipments:
+                        completed = [s for s in shipments if s.actual_delivery is not None]
+                        if completed:
+                            on_time_count = sum(
+                                1 for s in completed
+                                if s.actual_delivery <= s.estimated_delivery
+                            )
+                            on_time_rate = (on_time_count / len(completed) * 100) if completed else 0
+                        else:
+                            # Use current status/ETA as a live projection until deliveries complete.
+                            on_time_count = sum(
+                                1 for s in shipments
+                                if s.status not in ["delayed", "exception"]
+                                and s.estimated_delivery >= datetime.utcnow()
+                            )
+                            on_time_rate = (on_time_count / shipment_count * 100) if shipment_count > 0 else 0
                     else:
-                        on_time_rate = 0
+                        on_time_rate = fallback_on_time_rate
                 
                 trends.append({
                     "date": date.strftime("%Y-%m-%d"),

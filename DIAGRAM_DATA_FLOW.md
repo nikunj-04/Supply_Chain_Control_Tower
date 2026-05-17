@@ -1,0 +1,211 @@
+# Data Flow Diagram (DFD)
+
+## Project: E-commerce Fulfillment Operations Control Tower
+
+---
+
+## HOW TO RENDER
+
+1. Install **"Markdown Preview Mermaid Support"** in VS Code
+2. Open this file and press `Ctrl+Shift+V`
+   — or —
+3. Paste any diagram block into **https://mermaid.live**
+
+---
+
+## Section 1 — Level 0: Context Diagram
+
+Shows the system as a single process with all external actors and the high-level data they exchange.
+
+```mermaid
+flowchart LR
+    classDef actor  fill:#f5a623,stroke:#c47d0e,color:#000
+    classDef system fill:#2563eb,stroke:#1d4ed8,color:#fff,font-size:15px
+    classDef carrier fill:#7c3aed,stroke:#5b21b6,color:#fff
+
+    CUS(["👤 Customer / Client"]):::actor
+    OPM(["👤 Operations Manager\n& Warehouse Staff"]):::actor
+    ADM(["👤 System Admin"]):::actor
+    CAR(["🚚 Carrier /\nLogistics Partner"]):::carrier
+
+    SYS["      E-commerce Fulfillment\n   Operations Control Tower\n\n   FastAPI · React · SQLite      "]:::system
+
+    CUS  -->|"orders · return requests · payments"| SYS
+    SYS  -->|"confirmations · tracking · invoices · refunds"| CUS
+    OPM  -->|"manage · resolve exceptions · configure"| SYS
+    SYS  -->|"KPI dashboards · alerts · reports"| OPM
+    ADM  -->|"user & role management"| SYS
+    SYS  -->|"audit logs · access tokens"| ADM
+    CAR  -->|"tracking events · dock requests"| SYS
+    SYS  -->|"shipment manifests · dock schedules"| CAR
+```
+
+---
+
+## Section 2 — Level 1: Detailed Data Flow Diagram
+
+Shows all major services, their data flows, and which database each reads from / writes to.
+
+```mermaid
+flowchart TD
+
+    %% ─────────────────────────── STYLES ──────────────────────────────
+    classDef actor  fill:#f5a623,stroke:#c47d0e,color:#000,rx:20
+    classDef auth   fill:#7c3aed,stroke:#5b21b6,color:#fff
+    classDef svc    fill:#2563eb,stroke:#1d4ed8,color:#fff
+    classDef intel  fill:#dc2626,stroke:#991b1b,color:#fff
+    classDef store  fill:#16a34a,stroke:#166534,color:#fff
+    classDef carrier fill:#0891b2,stroke:#0e7490,color:#fff
+
+    %% ─────────────────────────── EXTERNAL ENTITIES ───────────────────
+    subgraph EXT[" External Entities "]
+        direction LR
+        CUS(["👤 Customer"]):::actor
+        OPM(["👤 Operations Manager\n& Warehouse Staff"]):::actor
+        ADM(["👤 System Admin"]):::actor
+        CAR(["🚚 Carrier"]):::carrier
+    end
+
+    %% ─────────────────────────── AUTH LAYER ──────────────────────────
+    AUTH["🔐 Auth Service\nLogin · JWT Issuance\nRBAC · Session Mgmt"]:::auth
+    DS_AUTH[("auth.db\nusers · roles · permissions\nsessions · audit_logs")]:::store
+
+    %% ─────────────────────────── OPERATIONS LAYER ────────────────────
+    subgraph OPS[" Operations Layer "]
+        direction LR
+        OMS["📦 Order Service\nCreate & update orders\nTrack order status"]:::svc
+        WMS["🏭 WMS Service\nInventory management\nPick task assignment"]:::svc
+        TMS["🚚 TMS Service\nShipment creation\nCarrier & route mgmt"]:::svc
+        YARD["🏗️ Yard Service\nDock scheduling\nTrailer tracking"]:::svc
+        BILL["💰 Billing Service\nInvoice generation\nPayment collection"]:::svc
+        RET["↩️ Returns Service\nRMA processing\nRefund management"]:::svc
+    end
+
+    %% ─────────────────────────── INTELLIGENCE LAYER ──────────────────
+    subgraph INTEL[" Intelligence Layer "]
+        direction LR
+        EXC["⚠️ Exception Engine\nDetect · Classify\nAssign · Resolve"]:::intel
+        DASH["📊 Dashboard Service\nKPI aggregation\nMetrics & reporting"]:::intel
+    end
+
+    %% ─────────────────────────── DATA STORES ─────────────────────────
+    subgraph STORES[" Data Stores — SQLite "]
+        direction LR
+        DS2[("oms.db\norders\norder_lines\norder_metrics")]:::store
+        DS3[("wms.db\ninventory\npicking_tasks\nwarehouse_metrics")]:::store
+        DS4[("tms.db\nshipments\nroutes\ntransport_metrics")]:::store
+        DS7[("yard.db\ndock_appointments\nyard_locations\nyard_metrics")]:::store
+        DS5[("billing.db\ninvoices\nbilling_line_items\nbilling_metrics")]:::store
+        DS6[("returns.db\nreturns\nreturn_line_items\nreturn_metrics")]:::store
+        DS8[("exceptions.db\nexceptions\nexception_actions\nexception_rules")]:::store
+    end
+
+    %% ─────────────────────────── DATA FLOWS ──────────────────────────
+
+    %% Auth flows
+    CUS      -->|"credentials"| AUTH
+    OPM      -->|"credentials"| AUTH
+    ADM      -->|"user / role config"| AUTH
+    AUTH     -->|"JWT token"| CUS
+    AUTH     -->|"JWT + role permissions"| OPM
+    AUTH    <-->|"read / write"| DS_AUTH
+
+    %% Customer-initiated flows
+    CUS      -->|"place order"| OMS
+    CUS      -->|"return request"| RET
+    CUS      -->|"payment"| BILL
+    CAR      -->|"tracking events"| TMS
+    CAR      -->|"dock appointment request"| YARD
+
+    %% Fulfillment chain (Order → Pick → Ship)
+    OMS      -->|"pick task created"| WMS
+    WMS      -->|"items picked & packed"| TMS
+
+    %% Responses back to customer
+    OMS      -->|"order confirmation"| CUS
+    TMS      -->|"shipment tracking"| CUS
+    BILL     -->|"invoice"| CUS
+    RET      -->|"refund confirmation"| CUS
+
+    %% Cross-service cost flows
+    OMS      -->|"order value"| BILL
+    TMS      -->|"freight cost"| BILL
+    RET      -->|"restock items"| WMS
+
+    %% Service ↔ Data Stores (read/write)
+    OMS     <-->|"orders / order lines"| DS2
+    WMS     <-->|"inventory / pick tasks"| DS3
+    TMS     <-->|"shipments / routes"| DS4
+    YARD    <-->|"appointments / yard slots"| DS7
+    BILL    <-->|"invoices / line items"| DS5
+    RET     <-->|"return records"| DS6
+
+    %% Exception detection signals (all services → Exception Engine)
+    OMS      -->|"delay / SLA breach"| EXC
+    WMS      -->|"stockout / pick delay"| EXC
+    TMS      -->|"shipment exception"| EXC
+    BILL     -->|"overdue / dispute"| EXC
+    RET      -->|"return spike"| EXC
+    YARD     -->|"missed appointment"| EXC
+    EXC     <-->|"exception records"| DS8
+    EXC      -->|"alerts & assignments"| OPM
+
+    %% Dashboard aggregation (all stores → Dashboard → OPM)
+    DS2      -->|"order metrics"| DASH
+    DS3      -->|"WMS metrics"| DASH
+    DS4      -->|"transport metrics"| DASH
+    DS5      -->|"billing metrics"| DASH
+    DS6      -->|"returns metrics"| DASH
+    DS7      -->|"yard metrics"| DASH
+    DS8      -->|"exception counts"| DASH
+    DASH     -->|"KPIs & dashboards"| OPM
+```
+
+---
+
+## Section 3 — Data Flow Narrative
+
+### Primary Fulfillment Flow
+```
+Customer → place order → Order Service → pick task → WMS Service
+                                                         ↓
+                                              items picked & packed
+                                                         ↓
+                                              TMS Service → carrier pickup
+                                                         ↓
+                                              tracking → Customer
+```
+
+### Billing Flow
+```
+Order Service  ─┐
+                ├─ order/freight cost data → Billing Service → invoice → Customer
+TMS Service    ─┘                                                        ↓
+                                                              payment collected
+```
+
+### Returns Flow
+```
+Customer → return request → Returns Service → refund → Customer
+                                    ↓
+                             restock signal → WMS Service → inventory updated
+```
+
+### Exception Detection Flow
+```
+Order / WMS / TMS / Billing / Returns / Yard
+       ↓  (anomaly / threshold breach signals)
+Exception Engine → classify + assign → Operations Manager
+       ↓
+   exceptions.db (full audit trail)
+```
+
+### KPI Aggregation Flow
+```
+oms.db + wms.db + tms.db + billing.db + returns.db + yard.db + exceptions.db
+       ↓  (metrics tables polled by Dashboard Service)
+Dashboard Service → on-time delivery %, inventory accuracy %, cost/shipment,
+                    return rate %, billing collection rate %, yard utilization %
+       ↓
+Operations Manager (live dashboard at :3000)
+```

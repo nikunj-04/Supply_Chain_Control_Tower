@@ -315,14 +315,26 @@ def seed_billing():
         statuses = ["pending", "paid", "overdue", "disputed"]
         service_types = ["storage", "picking", "packing", "shipping", "handling"]
         
-        # Seed invoices
-        for i in range(100):
-            invoice_id = f"INV-{30000 + i}"
-            order_id = f"ORD-{10000 + i}"
-            
-            invoice_date = datetime.utcnow() - timedelta(days=random.randint(0, 60))
-            due_date = invoice_date + timedelta(days=30)
-            status = random.choice(statuses)
+        # Seed invoices across the year: 20 recent (last 30 days), 30 this month, 50 distributed across the year
+        now = datetime.utcnow()
+        invoices_config = [
+            (20, 0, 30),      # 20 invoices in last 30 days
+            (30, 30, 60),     # 30 invoices in days 30-60
+            (50, 60, 365)     # 50 invoices distributed across remaining year
+        ]
+        
+        invoice_counter = 30000
+        for count, min_days, max_days in invoices_config:
+            for i in range(count):
+                invoice_id = f"INV-{invoice_counter}"
+                invoice_counter += 1
+                order_id = f"ORD-{10000 + invoice_counter}"
+                
+                # Distribute invoices evenly across the date range
+                days_back = random.randint(min_days, max_days)
+                invoice_date = now - timedelta(days=days_back)
+                due_date = invoice_date + timedelta(days=30)
+                status = random.choice(statuses)
             
             subtotal = random.uniform(100.0, 5000.0)
             tax = subtotal * 0.08
